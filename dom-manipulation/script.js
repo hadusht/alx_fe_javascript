@@ -325,3 +325,59 @@ async function postQuotesToServer() {
 //   ...
 //   postQuotesToServer();
 // }
+
+
+
+// -------------------- SYNC QUOTES WITH SERVER --------------------
+async function syncQuotes() {
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // mock server
+
+  try {
+    // 1. Fetch latest quotes from server
+    const response = await fetch(SERVER_URL);
+    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
+    const serverData = await response.json();
+
+    // Map server data to our quote format
+    const serverQuotes = serverData.map(item => ({
+      text: item.title || item.body || "Untitled",
+      category: "Server"
+    }));
+
+    // 2. Resolve conflicts and merge with local quotes
+    const localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+    const combinedQuotes = [...serverQuotes];
+
+    localQuotes.forEach(local => {
+      if (!serverQuotes.some(server => server.text === local.text)) {
+        combinedQuotes.push(local);
+      }
+    });
+
+    quotes = combinedQuotes;
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+    populateCategories();
+    showRandomQuote();
+
+    // 3. POST updated quotes back to server
+    const postResponse = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quotes)
+    });
+
+    if (!postResponse.ok) throw new Error(`POST failed with status ${postResponse.status}`);
+    const postResult = await postResponse.json();
+    console.log("Quotes synced with server:", postResult);
+
+  } catch (error) {
+    console.error("Error syncing quotes:", error);
+  }
+}
+
+// Optional: start periodic sync every 30 seconds
+function startPeriodicSync() {
+  syncQuotes(); // call immediately
+  setInterval(syncQuotes, 30000); // repeat every 30 seconds
+}
+
