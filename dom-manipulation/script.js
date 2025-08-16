@@ -294,3 +294,34 @@ function startPeriodicSyncAsync() {
   fetchQuotesFromServerAsync(); // call immediately
   setInterval(fetchQuotesFromServerAsync, 30000); // every 30 seconds
 }
+
+
+
+// -------------------- POST QUOTES TO SERVER --------------------
+async function postQuotesToServer() {
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // mock server
+  try {
+    const response = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quotes)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Quotes successfully sent to server:", result);
+  } catch (error) {
+    console.error("Error posting quotes to server:", error);
+  }
+}
+
+// Example: Call this function after adding a new quote
+// addQuote() {
+//   ...
+//   postQuotesToServer();
+// }
