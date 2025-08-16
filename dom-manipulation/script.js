@@ -270,3 +270,27 @@ function startPeriodicSync() {
   fetchQuotesFromServer(); // call immediately
   setInterval(fetchQuotesFromServer, 30000); // every 30 seconds
 }
+
+
+
+
+// -------------------- ASYNC/AWAIT VERSION FOR SERVER SYNC --------------------
+async function fetchQuotesFromServerAsync() {
+  const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // mock server
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverData = await response.json();
+    const serverQuotes = serverData.map(item => ({
+      text: item.title || item.body || "Untitled",
+      category: "Server"
+    }));
+    resolveServerConflicts(serverQuotes);
+  } catch (error) {
+    console.error("Error fetching server data:", error);
+  }
+}
+
+function startPeriodicSyncAsync() {
+  fetchQuotesFromServerAsync(); // call immediately
+  setInterval(fetchQuotesFromServerAsync, 30000); // every 30 seconds
+}
