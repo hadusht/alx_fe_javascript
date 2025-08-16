@@ -228,3 +228,68 @@ document.addEventListener("DOMContentLoaded", () => {
   // Attach event listener for "Show New Quote" button
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 });
+
+
+
+
+// -------------------- SERVER SYNC & CONFLICT RESOLUTION --------------------
+
+// Simulated server URL (can replace with actual API)
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // example placeholder
+
+// Fetch data from server
+async function fetchServerData() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverData = await response.json();
+
+    // Map server data to quote format if necessary
+    const serverQuotes = serverData.map(item => ({
+      text: item.title || item.body || "Untitled",
+      category: "Server"
+    }));
+
+    // Merge with local quotes and resolve conflicts
+    resolveConflicts(serverQuotes);
+  } catch (error) {
+    console.error("Error fetching server data:", error);
+  }
+}
+
+// Conflict resolution: server data takes precedence
+function resolveConflicts(serverQuotes) {
+  let localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+
+  // Simple conflict resolution: remove duplicates by text
+  const combinedQuotes = [...serverQuotes];
+
+  localQuotes.forEach(local => {
+    if (!serverQuotes.some(server => server.text === local.text)) {
+      combinedQuotes.push(local);
+    }
+  });
+
+  // Save merged quotes back to local storage
+  localStorage.setItem("quotes", JSON.stringify(combinedQuotes));
+  quotes = combinedQuotes;
+
+  // Notify user if server data added new quotes
+  if (serverQuotes.length > 0) {
+    alert("Quotes updated from server. Conflicts resolved automatically.");
+  }
+
+  // Refresh categories and display
+  populateCategories();
+  showRandomQuote();
+}
+
+// Function to sync data periodically (every 30 seconds for example)
+function startPeriodicSync() {
+  fetchServerData(); // initial fetch
+  setInterval(fetchServerData, 30000); // fetch every 30 seconds
+}
+
+// Call periodic sync after DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  startPeriodicSync();
+});
