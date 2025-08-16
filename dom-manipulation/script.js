@@ -79,3 +79,55 @@ function createAddQuoteForm() {
   // Append to body (hidden)
   document.body.appendChild(container);
 }
+
+
+
+// Save quotes to local storage
+function saveQuotes() {
+  localStorage.setItem('quotes', JSON.stringify(quotes));
+}
+
+// Load quotes from local storage
+function loadQuotes() {
+  const storedQuotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+  if (storedQuotes.length > 0) {
+    quotes = storedQuotes;
+  }
+}
+
+// Import quotes from JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(event) {
+    const importedQuotes = JSON.parse(event.target.result);
+    quotes.push(...importedQuotes);
+    saveQuotes();
+    alert('Quotes imported successfully!');
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+// Export quotes to JSON file
+function exportToJson() {
+  const data = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'quotes.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Initialize storage and event listeners
+document.addEventListener("DOMContentLoaded", () => {
+  loadQuotes();          // Load stored quotes
+  showRandomQuote();     // Display a random quote initially
+
+  // Buttons
+  document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+  document.getElementById("exportBtn")?.addEventListener("click", exportToJson);
+});
